@@ -12,12 +12,20 @@
     "cf-types": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "@repo/shared": "workspace:*",
-    "hono": "^4.11.5"
+    "better-auth": "^1.4.17",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.11.5",
+    "hono-pino": "^0.10.3",
+    "pino": "^10.3.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "wrangler": "^4.60.0",
-    "typescript": "5.9.2"
+    "@types/node": "^22.15.3",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.2",
+    "wrangler": "^4.60.0"
   }
 }
