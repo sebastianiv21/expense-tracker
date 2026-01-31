@@ -1,5 +1,19 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
+export class ApiError extends Error {
+  status: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.data = data;
+  }
+}
+
 interface ApiOptions extends RequestInit {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
@@ -31,13 +45,22 @@ export async function apiClient<T>(
 
   if (!response.ok) {
     let errorMessage = "An error occurred";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let errorData: any;
+
     try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorData.error || errorMessage;
+      const text = await response.text();
+      try {
+        errorData = JSON.parse(text);
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        errorMessage = text || errorMessage;
+      }
     } catch {
-      errorMessage = await response.text();
+      // Fallback if text() fails
     }
-    throw new Error(errorMessage);
+
+    throw new ApiError(errorMessage, response.status, errorData);
   }
 
   // Handle 204 No Content
