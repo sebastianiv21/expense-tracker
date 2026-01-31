@@ -31,7 +31,7 @@ import { signUp } from "@/lib/auth-client";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.email("Invalid email address"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -68,7 +68,7 @@ export default function RegisterPage() {
       toast.success("Account created successfully");
       router.push("/");
       router.refresh();
-    } catch (err) {
+    } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
@@ -76,7 +76,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
+    <div className="flex min-h-screen w-full items-center justify-center p-4">
       <Card className="w-full max-w-[400px]">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">

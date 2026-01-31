@@ -1,6 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
 interface ApiOptions extends RequestInit {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
 }
 
@@ -50,10 +51,13 @@ export async function apiClient<T>(
 export const api = {
   get: <T>(endpoint: string, options?: ApiOptions) =>
     apiClient<T>(endpoint, { ...options, method: "GET" }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   post: <T>(endpoint: string, body: any, options?: ApiOptions) =>
     apiClient<T>(endpoint, { ...options, method: "POST", body }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   put: <T>(endpoint: string, body: any, options?: ApiOptions) =>
     apiClient<T>(endpoint, { ...options, method: "PUT", body }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   patch: <T>(endpoint: string, body: any, options?: ApiOptions) =>
     apiClient<T>(endpoint, { ...options, method: "PATCH", body }),
   delete: <T>(endpoint: string, options?: ApiOptions) =>
