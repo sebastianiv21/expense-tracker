@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { type CreateTransaction } from "@repo/shared";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,33 +28,56 @@ import { api, ApiError } from "@/lib/api-client";
 import type { Transaction } from "@/app/(app)/transactions/page";
 import type { AllocationSummary } from "@/app/(app)/insights/page";
 import { TransactionItem } from "@/components/transactions/transaction-item";
+import { ResponsiveModal, ResponsiveModalClose } from "@/components/ui/responsive-modal";
+import { TransactionForm } from "@/components/transactions/transaction-form";
+import { type Category } from "@/app/(app)/categories/page";
 
 export default function DashboardPage() {
   const [allocation, setAllocation] = useState<AllocationSummary | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentMonth = format(new Date(), "yyyy-MM");
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [allocData, txnData] = await Promise.all([
-          api.get<AllocationSummary>(`/insights/allocation-summary?month=${currentMonth}`),
-          api.get<Transaction[]>("/transactions?limit=5"),
-        ]);
-        setAllocation(allocData);
-        setRecentTransactions(txnData.slice(0, 5));
-      } catch (err: unknown) {
-        const message = err instanceof ApiError ? err.message : "Failed to load dashboard";
-        toast.error(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const [allocData, txnData, catData] = await Promise.all([
+        api.get<AllocationSummary>(`/insights/allocation-summary?month=${currentMonth}`),
+        api.get<Transaction[]>("/transactions?limit=5"),
+        api.get<Category[]>("/categories"),
+      ]);
+      setAllocation(allocData);
+      setRecentTransactions(txnData.slice(0, 5));
+      setCategories(catData);
+    } catch (err: unknown) {
+      const message = err instanceof ApiError ? err.message : "Failed to load dashboard";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchDashboardData();
+  useEffect(() => {
+    fetchData();
   }, [currentMonth]);
+
+  const handleCreateTransaction = async (values: CreateTransaction) => {
+    setIsSubmitting(true);
+    try {
+      await api.post("/transactions", values);
+      toast.success("Transaction recorded");
+      setIsModalOpen(false);
+      fetchData();
+    } catch (err: unknown) {
+      const message = err instanceof ApiError ? err.message : "Failed to create transaction";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -76,12 +100,46 @@ export default function DashboardPage() {
             Welcome back! Here&apos;s your financial summary for {format(new Date(), "MMMM")}.
           </p>
         </div>
-        <Link href="/transactions">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Transaction
-          </Button>
-        </Link>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Transaction
+        </Button>
+        <ResponsiveModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          title="Add Transaction"
+          description="Enter the details of your new income or expense."
+          footer={
+            <>
+              <ResponsiveModalClose>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  Cancel
+                </Button>
+              </ResponsiveModalClose>
+              <Button
+                type="submit"
+                form="dashboard-transaction-form"
+                className="w-full sm:w-auto"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Record Transaction
+              </Button>
+            </>
+          }
+        >
+          <div className="py-2">
+            <TransactionForm
+              id="dashboard-transaction-form"
+              showFooter={false}
+              categories={categories}
+              onSubmit={handleCreateTransaction}
+              onCancel={() => setIsModalOpen(false)}
+            />
+          </div>
+        </ResponsiveModal>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
