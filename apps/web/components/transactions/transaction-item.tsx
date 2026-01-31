@@ -22,11 +22,11 @@ export function TransactionItem({
   const amount = Number(transaction.amount);
 
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors group">
-      <div className="flex items-center gap-4">
+    <div className="flex items-center justify-between p-3 sm:p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors group gap-2">
+      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
         <div
           className={cn(
-            "p-2 rounded-full",
+            "p-2 rounded-full shrink-0",
             isExpense
               ? "bg-red-100 text-red-600"
               : "bg-green-100 text-green-600",
@@ -38,29 +38,32 @@ export function TransactionItem({
             <ArrowUpCircle className="h-5 w-5" />
           )}
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="font-semibold truncate block">
               {transaction.description ||
                 transaction.category?.name ||
                 "Uncategorized"}
             </span>
             {transaction.category && (
-              <Badge variant="outline" className="text-[10px] uppercase">
+              <Badge
+                variant="outline"
+                className="text-[10px] uppercase shrink-0 hidden sm:inline-flex"
+              >
                 {transaction.category.name}
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground truncate">
             {format(new Date(transaction.date), "PPP")}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         <span
           className={cn(
-            "font-bold",
+            "font-bold text-sm sm:text-base",
             isExpense ? "text-red-600" : "text-green-600",
           )}
         >
@@ -71,7 +74,7 @@ export function TransactionItem({
           }).format(amount)}
         </span>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="icon"
