@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api-client";
 import { Loader2 } from "lucide-react";
 
@@ -11,16 +11,9 @@ export function FinancialProfileGuard({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Don't check on onboarding page itself to avoid infinite loop
-    if (pathname === "/onboarding") {
-      setIsChecking(false);
-      return;
-    }
-
     async function checkProfile() {
       try {
         await api.get("/financial-profile");
@@ -38,9 +31,9 @@ export function FinancialProfileGuard({
     }
 
     checkProfile();
-  }, [pathname, router]);
+  }, [router]);
 
-  if (isChecking && pathname !== "/onboarding") {
+  if (isChecking) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -85,7 +85,8 @@ export default function OnboardingPage() {
       router.push("/");
       router.refresh();
     } catch (err: unknown) {
-      const message = err instanceof ApiError ? err.message : "Failed to create profile";
+      const message =
+        err instanceof ApiError ? err.message : "Failed to create profile";
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -94,11 +95,14 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-4">
-      <Card className="w-full max-w-[500px]">
+      <Card className="w-full max-w-125">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Welcome! Let&apos;s set your budget</CardTitle>
+          <CardTitle className="text-2xl text-center">
+            Welcome! Let&apos;s set your budget
+          </CardTitle>
           <CardDescription className="text-center">
-            Configure your monthly income target and how you want to allocate it using the 50/30/20 rule.
+            Configure your monthly income target and how you want to allocate it
+            using the 50/30/20 rule.
           </CardDescription>
         </CardHeader>
         <Form {...form}>
@@ -112,14 +116,18 @@ export default function OnboardingPage() {
                     <FormLabel>Monthly Income Target</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                        <span className="absolute left-3 top-2.5 text-muted-foreground">
+                          $
+                        </span>
                         <Input
                           placeholder="5000"
                           type="number"
                           className="pl-7"
                           disabled={isLoading}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </div>
                     </FormControl>
@@ -146,7 +154,9 @@ export default function OnboardingPage() {
                           type="number"
                           disabled={isLoading}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -167,7 +177,9 @@ export default function OnboardingPage() {
                           type="number"
                           disabled={isLoading}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -188,7 +200,9 @@ export default function OnboardingPage() {
                           type="number"
                           disabled={isLoading}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -199,7 +213,9 @@ export default function OnboardingPage() {
 
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                 <span className="text-sm font-medium">Total Allocation:</span>
-                <span className={`text-sm font-bold ${Math.abs(total - 100) < 0.01 ? "text-green-600" : "text-destructive"}`}>
+                <span
+                  className={`text-sm font-bold ${Math.abs(total - 100) < 0.01 ? "text-green-600" : "text-destructive"}`}
+                >
                   {total}%
                 </span>
               </div>
@@ -210,7 +226,11 @@ export default function OnboardingPage() {
               )}
             </CardContent>
             <CardFooter>
-              <Button className="w-full" type="submit" disabled={isLoading || Math.abs(total - 100) >= 0.01}>
+              <Button
+                className="w-full"
+                type="submit"
+                disabled={isLoading || Math.abs(total - 100) >= 0.01}
+              >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Complete Setup
               </Button>

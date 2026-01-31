@@ -2,210 +2,147 @@
 
 ## Project Overview
 
-Turborepo monorepo for a serverless expense tracking app with intentional spending (50/30/20 budget allocation).
+Turborepo monorepo for a serverless expense tracker implementing the 50/30/20 rule.
 
-**Tech Stack:**
+Tech Stack
 
 - Frontend: Next.js 16 (App Router), React 19, shadcn/ui, Tailwind CSS
-- Backend: Cloudflare Workers, Hono framework, Better Auth
-- Database: Neon Postgres (serverless), Drizzle ORM
-- Validation: Zod (shared schemas)
-- Deployment: Cloudflare Pages (frontend), Cloudflare Workers (API)
+- Backend: Cloudflare Workers, Hono, Better Auth
+- Database: Neon Postgres, Drizzle ORM
+- Validation: Zod (shared schemas in packages/shared)
+- Deployment: Cloudflare Pages (web) + Cloudflare Workers (api)
 
 ## Commands
 
-### Root-level Commands
+Root (run from repo root)
 
 ```bash
-# Install dependencies
-pnpm install
+pnpm install          # Install dependencies
+pnpm dev              # Dev (all apps)
+pnpm build            # Build all apps
+pnpm lint             # Lint all packages
+pnpm check-types      # Type check all packages
+pnpm format           # Prettier write
+```
 
-# Development (all apps)
-pnpm dev
+Package-level
 
-# Build all apps
+```bash
+# apps/web (Next.js)
+pnpm dev              # :3000
 pnpm build
-
-# Lint all packages
 pnpm lint
-
-# Type checking all packages
 pnpm check-types
 
-# Format all files
-pnpm format
+# apps/api (Workers)
+pnpm dev              # Wrangler dev
+pnpm deploy
+pnpm db:generate      # Drizzle migrations
+pnpm db:push          # Push to database
+pnpm db:studio        # Drizzle Studio
+pnpm db:seed          # Seed data
+pnpm cf-types         # Generate bindings types
+pnpm check-types
+
+# packages/shared
+pnpm lint
+pnpm check-types
 ```
 
-### App-specific Commands
+Turbo filters
 
 ```bash
-# Frontend (apps/web)
-cd apps/web
-pnpm dev              # Start dev server on :3000
-pnpm build            # Build for production
-pnpm lint             # Lint Next.js app
-pnpm check-types      # Type check
-
-# Backend API (apps/api)
-cd apps/api
-pnpm dev              # Start Wrangler dev server
-pnpm deploy           # Deploy to Cloudflare
-pnpm db:generate      # Generate Drizzle migrations
-pnpm db:push          # Push migrations to database
-pnpm db:studio        # Open Drizzle Studio
-pnpm cf-types         # Generate Cloudflare bindings types
-
-# Shared Package (packages/shared)
-cd packages/shared
-pnpm lint             # Lint Zod schemas
-pnpm check-types      # Type check
-```
-
-### Turbo Filters
-
-```bash
-# Run command for specific package
 turbo build --filter=web
 turbo dev --filter=api
 turbo lint --filter=@repo/shared
 ```
 
+Testing
+
+- No test runner configured in this repo.
+- Single-test command: N/A until a test framework is added.
+- Manual checks: run dev servers and verify flows in web + api.
+
 ## Code Style Guidelines
 
-### TypeScript
+TypeScript
 
-- **Strict mode enabled**: All TypeScript must pass strict type checking
-- **No implicit any**: Always specify types explicitly
-- **Array access**: Use optional chaining for array/object access (enforced by `noUncheckedIndexedAccess`)
-- **Module system**: ESM only (`type: "module"` in all package.json files)
-- **File extensions**: Use `.ts` for modules, `.tsx` for React components
+- Strict mode; no implicit any.
+- Use optional chaining for array/object access (`noUncheckedIndexedAccess`).
+- ESM only (`type: "module"`).
+- File extensions: `.ts` for modules, `.tsx` for React components.
 
-### Imports
+Imports
 
-- **Style**: Named imports preferred over default imports
-- **Zod**: Always use `import { z } from 'zod'` (not `import * as z`)
-- **Order**: External packages → Internal workspace packages → Relative imports
-- **Workspace packages**: Use `@repo/shared`, `@repo/eslint-config`, etc.
+- Prefer named imports.
+- Zod must be `import { z } from "zod"`.
+- Order: external packages → internal workspace packages → relative.
+- Workspace packages: `@repo/shared`, `@repo/eslint-config`, `@repo/typescript-config`.
 
-```typescript
-// ✅ Good
-import { z } from "zod";
-import { createCategorySchema } from "@repo/shared";
-import { db } from "../lib/db";
+Formatting
 
-// ❌ Bad
-import * as z from "zod"; // Don't use namespace imports for zod
-```
+- Semicolons required.
+- 2-space indentation.
+- 100 char soft limit.
+- Trailing commas in multi-line objects/arrays.
+- Double quotes in Zod schemas and JSX; single quotes OK elsewhere.
 
-### Formatting
+Naming
 
-- **Quotes**: Double quotes for strings in Zod schemas and JSX, single quotes acceptable elsewhere
-- **Semicolons**: Required (enforced by Prettier)
-- **Indentation**: 2 spaces
-- **Line length**: 100 characters (soft limit)
-- **Trailing commas**: Required in multi-line objects/arrays
+- Files: kebab-case (`financial-profile.ts`).
+- React components: PascalCase.
+- Variables/functions: camelCase.
+- Types/interfaces: PascalCase.
+- Constants: SCREAMING_SNAKE_CASE.
+- Zod schemas: camelCase ending in `Schema`.
+- Enums: camelCase ending in `Enum`.
 
-### Naming Conventions
+Zod schemas (packages/shared)
 
-- **Files**: kebab-case for files (`financial-profile.ts`, `transaction-form.tsx`)
-- **Components**: PascalCase for React components (`TransactionList`, `AllocationCard`)
-- **Variables/Functions**: camelCase (`userId`, `calculateIncome`, `allocationBucket`)
-- **Types/Interfaces**: PascalCase (`CreateTransaction`, `AllocationBucket`)
-- **Constants**: SCREAMING_SNAKE_CASE for true constants (`DEFAULT_CATEGORIES`)
-- **Zod Schemas**: camelCase ending in `Schema` (`createTransactionSchema`)
-- **Enums**: camelCase ending in `Enum` (`allocationBucketEnum`)
+- Export both schema and inferred type.
+- Use `z.enum()` for string unions.
+- Provide friendly error messages.
+- Use `.refine()` for cross-field validation.
 
-### Zod Schemas (packages/shared)
+Error handling
 
-- **Export schemas AND types**: Always export both the schema and inferred type
-- **Error messages**: Provide user-friendly error messages in validators
-- **Enums**: Use `z.enum()` for string unions, export as separate const
-- **Validation**: Use `.refine()` for complex validation logic with clear error messages
+- API responses: proper HTTP status codes (400/401/404/500).
+- Never leak raw DB errors to clients.
+- Validate all inputs with Zod on both frontend and backend.
+- Prefer async/await; wrap async work in try/catch.
 
-```typescript
-// ✅ Good
-export const allocationBucketEnum = z.enum(["needs", "wants", "future"]);
-export const createCategorySchema = z
-  .object({
-    name: z.string().min(1, "Name is required").max(50),
-    type: categoryTypeEnum,
-    allocationBucket: allocationBucketEnum.nullable(),
-  })
-  .refine(
-    (data) => {
-      if (data.type === "income" && data.allocationBucket !== null) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Income categories cannot have an allocation bucket",
-      path: ["allocationBucket"],
-    },
-  );
-export type CreateCategory = z.infer<typeof createCategorySchema>;
-```
+Database (Drizzle/Neon)
 
-### Error Handling
+- Money: Postgres `numeric` (never float/int).
+- Primary keys: `uuid`.
+- Timestamps: `timestamp` with `.defaultNow()`.
+- Scope all queries by `userId`.
+- Never edit applied migrations; always create new ones.
+- Use Neon HTTP driver in Workers.
 
-- **API errors**: Return proper HTTP status codes (400, 401, 404, 500)
-- **User-facing errors**: Provide clear, actionable error messages
-- **Validation**: Use Zod for all input validation on both frontend and backend
-- **Database errors**: Never expose raw database errors to users
-- **Async/await**: Prefer async/await over .then() chains
-- **Try-catch**: Wrap async operations in try-catch blocks
+React/Next.js
 
-### Database (Drizzle ORM)
+- Default to server components; use `"use client"` when needed.
+- Colocate page-specific components with the route.
+- Use shadcn/ui components for UI primitives.
+- Mobile-first Tailwind; test 375px viewport.
+- Accessibility: 44px min touch targets, proper ARIA labels.
 
-- **Money amounts**: Always use `numeric` type (not float/integer)
-- **UUIDs**: Use `uuid` for all primary keys
-- **Timestamps**: Use `timestamp` with `.defaultNow()` for created_at/updated_at
-- **User scoping**: ALL queries must filter by `userId` for multi-tenant data
-- **Migrations**: Never edit applied migrations, always create new ones
+Cloudflare Workers
 
-### React/Next.js
+- Stateless functions only.
+- No direct DB access from frontend; always via API.
+- Keep handlers fast; avoid long-running work.
 
-- **'use client'**: Mark client components explicitly
-- **Server components**: Default to server components, use client only when needed
-- **File structure**: Colocate components with pages when page-specific
-- **shadcn/ui**: Use shadcn components for all UI elements
-- **Mobile-first**: Write CSS mobile-first, use Tailwind breakpoints (sm:, md:, lg:)
-- **Accessibility**: Minimum 44px touch targets, proper ARIA labels
+## Security and Data Integrity
 
-## Critical Constraints
-
-### Security
-
-- ❌ Never commit secrets to git (.env files are gitignored)
-- ❌ Never connect frontend directly to database (always via API)
-- ❌ Never expose database connection strings to client
-- ✅ All data access scoped by authenticated user ID
-- ✅ Validate all inputs with Zod on both frontend and backend
-
-### Data Integrity
-
-- ❌ Never use floats for money (use Postgres NUMERIC type)
-- ❌ Never edit already-applied database migrations
-- ✅ Percentages must sum to exactly 100% (financial profiles)
-- ✅ Apply migrations in order: dev → preview → prod
-
-### Architecture
-
-- ❌ No VPS or long-lived servers (serverless only)
-- ❌ No direct database access from frontend
-- ❌ No state in Cloudflare Workers (stateless functions)
-- ✅ Keep Workers stateless and fast
-- ✅ Use Neon HTTP driver for Cloudflare Workers compatibility
-
-## Testing
-
-- No test framework currently configured (MVP stage)
-- Manual testing via dev servers and Drizzle Studio
-- Future: Consider Vitest for unit tests, Playwright for E2E
+- Never commit secrets or `.env` files.
+- Never expose database connection strings to clients.
+- All data access must be scoped to authenticated user ID.
+- Percentages in financial profiles must sum to 100%.
+- Apply migrations in order: dev → preview → prod.
 
 ## Environment Variables
-
-Required for local development:
 
 ```bash
 # apps/api/.env.local
@@ -217,17 +154,12 @@ BETTER_AUTH_URL=http://localhost:8787
 NEXT_PUBLIC_API_URL=http://localhost:8787
 ```
 
-## Deployment
+## Cursor/Copilot Rules
 
-- Frontend: Cloudflare Pages (automatic via git push)
-- API: Cloudflare Workers (via `wrangler deploy`)
-- Environments: dev (local), preview (PR previews), prod (production)
-- Each environment has separate Neon database
+- No .cursor rules or Copilot instructions found in this repo.
 
 ## Notes for Agents
 
-- This is an active development project implementing intentional spending (50/30/20 rule)
-- Follow the implementation plan in planning conversations before making changes
-- When in doubt, prefer simplicity and follow existing patterns
-- Always test locally before suggesting deployment
-- Mobile-first UI is critical - test on 375px viewport
+- Follow existing patterns in the codebase; keep changes minimal.
+- Prefer simple, explicit code over clever abstractions.
+- Avoid editing unrelated files.
