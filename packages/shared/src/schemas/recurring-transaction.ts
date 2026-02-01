@@ -18,8 +18,8 @@ export const createRecurringTransactionSchema = z.object({
   frequency: recurrenceFrequencyEnum,
   startDate: z.string(),
   endDate: z.string().optional(),
-  isActive: z.boolean().default(true),
-  generateFirst: z.boolean().default(false),
+  isActive: z.boolean(),
+  generateFirst: z.boolean(),
 });
 
 export const updateRecurringTransactionSchema = z.object({
