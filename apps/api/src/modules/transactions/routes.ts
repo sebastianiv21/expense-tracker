@@ -1,22 +1,40 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, like } from "drizzle-orm";
 import { getDb } from "../../db";
 import { transaction } from "../../db/schema/transaction";
-import { createTransactionSchema, updateTransactionSchema } from "@repo/shared";
+import { createTransactionSchema, updateTransactionSchema, transactionQuerySchema } from "@repo/shared";
 import { requireAuth } from "../../lib/session";
 
 export const transactionsRoutes = new Hono();
 
-// Get all transactions for current user (with optional filters)
+// Get all transactions for current user (with optional filters and pagination)
 transactionsRoutes.get("/", requireAuth, async (c) => {
   const session = c.var.session;
   const searchParams = c.req.query();
-  const startDate = searchParams.startDate;
-  const endDate = searchParams.endDate;
-  const type = searchParams.type as "expense" | "income" | undefined;
-  const categoryId = searchParams.categoryId;
   const db = getDb();
+
+  // Validate and parse query params
+  const parsed = transactionQuerySchema.safeParse(searchParams);
+  if (!parsed.success) {
+    throw new HTTPException(400, {
+      message: parsed.error.issues.map((i) => i.message).join(", ") || "Invalid query parameters",
+    });
+  }
+
+  const {
+    startDate,
+    endDate,
+    type,
+    categoryId,
+    search,
+    minAmount,
+    maxAmount,
+    limit,
+    offset,
+    sortBy,
+    sortOrder,
+  } = parsed.data;
 
   const whereConditions: any[] = [eq(transaction.userId, session.user.id)];
 
@@ -36,15 +54,66 @@ transactionsRoutes.get("/", requireAuth, async (c) => {
     whereConditions.push(eq(transaction.categoryId, categoryId));
   }
 
+  if (search) {
+    whereConditions.push(like(transaction.description, `%${search}%`));
+  }
+
+  if (minAmount !== undefined) {
+    whereConditions.push(
+      gte(
+        sql`CAST(${transaction.amount} AS NUMERIC(10,2))`,
+        minAmount.toString(),
+      ),
+    );
+  }
+
+  if (maxAmount !== undefined) {
+    whereConditions.push(
+      lte(
+        sql`CAST(${transaction.amount} AS NUMERIC(10,2))`,
+        maxAmount.toString(),
+      ),
+    );
+  }
+
+  // Build order by clause
+  const orderByColumn =
+    sortBy === "amount"
+      ? transaction.amount
+      : sortBy === "createdAt"
+        ? transaction.createdAt
+        : transaction.date;
+
+  const orderBy = sortOrder === "asc" ? asc(orderByColumn) : desc(orderByColumn);
+
+  // Get total count for pagination
+  const countResult = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(transaction)
+    .where(and(...whereConditions));
+
+  const total = Number(countResult[0]?.count || 0);
+
+  // Get paginated transactions
   const transactions = await db.query.transaction.findMany({
     where: and(...whereConditions),
-    orderBy: [desc(transaction.date), desc(transaction.createdAt)],
+    orderBy: [orderBy, desc(transaction.createdAt)],
+    limit,
+    offset,
     with: {
       category: true,
     },
   });
 
-  return c.json(transactions);
+  return c.json({
+    data: transactions,
+    pagination: {
+      total,
+      limit,
+      offset,
+      hasMore: offset + transactions.length < total,
+    },
+  });
 });
 
 // Create new transaction

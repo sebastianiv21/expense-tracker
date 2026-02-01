@@ -164,3 +164,49 @@ Default categories are automatically created via Better Auth's `after` user crea
 2. **Frontend:** Create API client wrapper in `apps/web/lib/api-client.ts`.
 3. **Frontend:** Implement Login and Register pages.
 4. **Frontend:** Set up Next.js middleware for route protection.
+
+❌ Missing Features
+
+### High Priority (Core Functionality)
+1. **Production Deployment Setup**
+   - Cloudflare Workers secrets not configured (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`)
+   - Cloudflare Pages frontend deployment not configured
+   - Environment variables only set for local dev
+
+2. **Transaction Filtering & Search**
+   - Filter button exists but not functional
+   - No date range filtering UI hooked up
+   - No search by description/category
+
+3. **CSV Export**
+   - Export button exists but not implemented
+
+4. **Pagination**
+   - No pagination on transactions list (will load all transactions)
+
+### Medium Priority (User Experience)
+5. **Recurring/Planned Transactions**
+   - "Planned Outflow" section uses mock data
+   - No recurring transaction support
+
+6. **Account Settings**
+   - Personal Info, Preferences sections are disabled placeholders
+   - No password change functionality
+
+7. **Forgot Password / Password Reset**
+   - Not implemented
+
+8. **Email Verification**
+   - Not implemented
+
+### Lower Priority (Nice to Have)
+9. **Transaction Import (CSV)**
+10. **Multi-currency Support**
+11. **Weekly Budget Period** (only monthly supported in UI)
+12. **Offline Support / PWA**
+13. **Push Notifications / Reminders**
+14. **Transaction Attachments/Receipts**
+
+### Technical Debt
+15. **Test Suite** - No test framework configured
+16. **API Documentation** - No API docs generated
