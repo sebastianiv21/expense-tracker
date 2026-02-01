@@ -15,6 +15,13 @@
       "when": 1769358099946,
       "tag": "0001_solid_silver_samurai",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769913815063,
+      "tag": "0002_flashy_microbe",
+      "breakpoints": true
     }
   ]
 }

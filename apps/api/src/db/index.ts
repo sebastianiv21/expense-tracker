@@ -5,6 +5,7 @@ import * as categorySchema from "./schema/category";
 import * as transactionSchema from "./schema/transaction";
 import * as budgetSchema from "./schema/budget";
 import * as financialProfileSchema from "./schema/financial-profile";
+import * as recurringTransactionSchema from "./schema/recurring-transaction";
 
 export const schema = {
   ...authSchema,
@@ -12,6 +13,7 @@ export const schema = {
   ...transactionSchema,
   ...budgetSchema,
   ...financialProfileSchema,
+  ...recurringTransactionSchema,
 };
 
 export type FullSchema = typeof schema;

@@ -5,6 +5,7 @@ import {
   Tag,
   BarChart3,
   User,
+  Repeat,
 } from "lucide-react";
 
 export const navItems = [
@@ -22,6 +23,11 @@ export const navItems = [
     label: "Budgets",
     href: "/budgets",
     icon: PieChart,
+  },
+  {
+    label: "Recurring",
+    href: "/recurring",
+    icon: Repeat,
   },
   {
     label: "Insights",
@@ -47,9 +53,9 @@ export const bottomNavItems = [
     icon: ArrowLeftRight,
   },
   {
-    label: "Budgets",
-    href: "/budgets",
-    icon: PieChart,
+    label: "Recurring",
+    href: "/recurring",
+    icon: Repeat,
   },
   {
     label: "Profile",

@@ -9,7 +9,6 @@ import {
   Home,
   Coffee,
   PiggyBank,
-  Calendar,
   Plus,
   History,
 } from "lucide-react";
@@ -30,41 +29,53 @@ import { TransactionForm } from "@/components/transactions/transaction-form";
 import { type Category } from "@/app/(app)/categories/page";
 import { AllocationCard } from "@/components/dashboard/allocation-card";
 import { MindfulSavingsWidget } from "@/components/dashboard/mindful-savings-widget";
+import { PlannedOutflowCard } from "@/components/dashboard/planned-outflow";
 import { authClient } from "@/lib/auth-client";
-
-// Mock data for planned outflows - in a real app, this would come from the API
-const plannedOutflows = [
-  { date: "MAR 12", name: "Cloud Subscription", amount: 14.99, category: "Needs" },
-  { date: "MAR 15", name: "Rent Payment", amount: 1200, category: "Needs" },
-];
 
 export default function DashboardPage() {
   const [allocation, setAllocation] = useState<AllocationSummary | null>(null);
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
+    [],
+  );
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { data: session } = authClient.useSession();
-  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "Friend";
+  const userName =
+    session?.user?.name || session?.user?.email?.split("@")[0] || "Friend";
 
   const currentMonth = format(new Date(), "yyyy-MM");
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+interface TransactionsResponse {
+  data: Transaction[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
 
   const fetchData = async () => {
     try {
       const [allocData, txnData, catData] = await Promise.all([
-        api.get<AllocationSummary>(`/insights/allocation-summary?month=${currentMonth}`),
-        api.get<Transaction[]>("/transactions?limit=5"),
+        api.get<AllocationSummary>(
+          `/insights/allocation-summary?month=${currentMonth}`,
+        ),
+        api.get<TransactionsResponse>("/transactions?limit=5"),
         api.get<Category[]>("/categories"),
       ]);
       setAllocation(allocData);
-      setRecentTransactions(txnData.slice(0, 5));
+      setRecentTransactions(txnData.data.slice(0, 5));
       setCategories(catData);
     } catch (err: unknown) {
-      const message = err instanceof ApiError ? err.message : "Failed to load dashboard";
+      const message =
+        err instanceof ApiError ? err.message : "Failed to load dashboard";
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -83,7 +94,8 @@ export default function DashboardPage() {
       setIsModalOpen(false);
       fetchData();
     } catch (err: unknown) {
-      const message = err instanceof ApiError ? err.message : "Failed to create transaction";
+      const message =
+        err instanceof ApiError ? err.message : "Failed to create transaction";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -98,14 +110,18 @@ export default function DashboardPage() {
     );
   }
 
-  const totalSpent = (allocation?.actual.needs || 0) + (allocation?.actual.wants || 0) + (allocation?.actual.future || 0);
+  const totalSpent =
+    (allocation?.actual.needs || 0) +
+    (allocation?.actual.wants || 0) +
+    (allocation?.actual.future || 0);
   const income = allocation?.income || 0;
   const balance = income - totalSpent;
-  
+
   // Calculate monthly goal (assuming 50/30/20 rule)
   const monthlyGoal = income * 0.2; // 20% savings goal
   const savingsProgress = allocation?.actual.future || 0;
-  const savingsPercentage = monthlyGoal > 0 ? Math.min(100, (savingsProgress / monthlyGoal) * 100) : 0;
+  const savingsPercentage =
+    monthlyGoal > 0 ? Math.min(100, (savingsProgress / monthlyGoal) * 100) : 0;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -116,7 +132,8 @@ export default function DashboardPage() {
             {greeting}, {userName}.
           </h1>
           <p className="text-[#a89580] text-sm md:text-base">
-            You&apos;ve saved {savingsPercentage.toFixed(0)}% more than last month. Keep breathing.
+            You&apos;ve saved {savingsPercentage.toFixed(0)}% more than last
+            month. Keep breathing.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -127,9 +144,6 @@ export default function DashboardPage() {
             <Plus className="mr-2 h-4 w-4" />
             Add Transaction
           </Button>
-          <button className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#1f1815] border border-[#2d2420] hover:bg-[#2d2420] transition-colors">
-            <Settings2 className="h-5 w-5 text-[#a89580]" />
-          </button>
         </div>
       </header>
 
@@ -146,7 +160,11 @@ export default function DashboardPage() {
                   Mindful Balance
                 </span>
                 <div className="text-5xl font-extrabold text-white mt-1">
-                  ${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  $
+                  {balance.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
                 <p className="text-white/70 text-sm mt-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-white" />
@@ -154,11 +172,19 @@ export default function DashboardPage() {
                 </p>
               </div>
               <div className="bg-black/20 backdrop-blur-md rounded-2xl p-4 md:w-48">
-                <p className="text-white/60 text-xs mb-2 uppercase tracking-wider">Monthly Goal</p>
+                <p className="text-white/60 text-xs mb-2 uppercase tracking-wider">
+                  Monthly Goal
+                </p>
                 <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${savingsPercentage}%` }} />
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${savingsPercentage}%` }}
+                  />
                 </div>
-                <p className="text-white text-xs mt-2">{savingsPercentage.toFixed(0)}% achieved (+${savingsProgress.toFixed(0)})</p>
+                <p className="text-white text-xs mt-2">
+                  {savingsPercentage.toFixed(0)}% achieved (+$
+                  {savingsProgress.toFixed(0)})
+                </p>
               </div>
             </div>
           </section>
@@ -166,8 +192,13 @@ export default function DashboardPage() {
           {/* Budget Breakdown (50/30/20) */}
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#f5f2ed]">Spending Harmony</h2>
-              <Link href="/budgets" className="text-sm text-[#a89562] font-semibold hover:underline cursor-pointer">
+              <h2 className="text-xl font-bold text-[#f5f2ed]">
+                Spending Harmony
+              </h2>
+              <Link
+                href="/budgets"
+                className="text-sm text-[#a89562] font-semibold hover:underline cursor-pointer"
+              >
                 Refine Rule
               </Link>
             </div>
@@ -179,16 +210,24 @@ export default function DashboardPage() {
                 budget={allocation?.targets.needs ?? income * 0.5}
                 category="needs"
                 icon={Home}
-                percentage={allocation?.targets.needs ? ((allocation.actual.needs / allocation.targets.needs) * 100) : 0}
+                percentage={
+                  allocation?.targets.needs
+                    ? (allocation.actual.needs / allocation.targets.needs) * 100
+                    : 0
+                }
               />
               <AllocationCard
                 title="Wants"
-                subtitle="Life&apos;s Joy"
+                subtitle="Life's Joy"
                 spent={allocation?.actual.wants ?? 0}
                 budget={allocation?.targets.wants ?? income * 0.3}
                 category="wants"
                 icon={Coffee}
-                percentage={allocation?.targets.wants ? ((allocation.actual.wants / allocation.targets.wants) * 100) : 0}
+                percentage={
+                  allocation?.targets.wants
+                    ? (allocation.actual.wants / allocation.targets.wants) * 100
+                    : 0
+                }
               />
               <AllocationCard
                 title="Savings"
@@ -197,7 +236,12 @@ export default function DashboardPage() {
                 budget={allocation?.targets.future ?? income * 0.2}
                 category="savings"
                 icon={PiggyBank}
-                percentage={allocation?.targets.future ? ((allocation.actual.future / allocation.targets.future) * 100) : 0}
+                percentage={
+                  allocation?.targets.future
+                    ? (allocation.actual.future / allocation.targets.future) *
+                      100
+                    : 0
+                }
               />
             </div>
           </section>
@@ -205,9 +249,14 @@ export default function DashboardPage() {
           {/* Transactions Section */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-[#f5f2ed]">Recent Awareness</h2>
+              <h2 className="text-xl font-bold text-[#f5f2ed]">
+                Recent Awareness
+              </h2>
               <Link href="/transactions">
-                <Button variant="ghost" className="text-sm text-[#a89580] hover:text-[#f5f2ed]">
+                <Button
+                  variant="ghost"
+                  className="text-sm text-[#a89580] hover:text-[#f5f2ed]"
+                >
                   View History
                 </Button>
               </Link>
@@ -216,7 +265,9 @@ export default function DashboardPage() {
               {recentTransactions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center bg-[#1f1815] rounded-2xl border border-[#2d2420]">
                   <History className="h-8 w-8 text-[#a89580] mb-2" />
-                  <p className="text-sm text-[#a89580] italic">No transactions found. Start your mindful journey.</p>
+                  <p className="text-sm text-[#a89580] italic">
+                    No transactions found. Start your mindful journey.
+                  </p>
                 </div>
               ) : (
                 recentTransactions.map((txn) => (
@@ -233,35 +284,8 @@ export default function DashboardPage() {
 
         {/* Right Column: Context & Widgets */}
         <aside className="space-y-8">
-          {/* Calendar/Schedule Mini */}
-          <div className="bg-[#1f1815] p-6 rounded-[32px] border border-[#2d2420]">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-[#f5f2ed]">Planned Outflow</h3>
-              <Calendar className="h-5 w-5 text-[#a89580]" />
-            </div>
-            <div className="space-y-4">
-              {plannedOutflows.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[#16110a] flex flex-col items-center justify-center text-xs border border-[#2d2420]">
-                    <span className="text-[#a89580] text-[10px]">{item.date.split(" ")[0]}</span>
-                    <span className="font-bold text-[#f5f2ed]">{item.date.split(" ")[1]}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#f5f2ed] truncate">{item.name}</p>
-                    <p className="text-xs text-[#a89580]">${item.amount} • {item.category}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link href="/budgets">
-              <Button
-                variant="outline"
-                className="w-full mt-6 py-3 rounded-xl border-[#2d2420] text-sm font-medium text-[#a89580] hover:text-[#f5f2ed] hover:bg-[#16110a] transition-all bg-transparent"
-              >
-                Manage Recurring
-              </Button>
-            </Link>
-          </div>
+          {/* Planned Outflow - Real Data */}
+          <PlannedOutflowCard limit={3} />
 
           {/* Mindful Savings Widget */}
           <MindfulSavingsWidget />
@@ -269,12 +293,20 @@ export default function DashboardPage() {
           {/* Quick Stats Cards */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#1f1815] p-4 rounded-2xl border border-[#2d2420]">
-              <p className="text-[#a89580] text-[10px] uppercase font-bold tracking-widest">Daily Avg</p>
-              <p className="text-xl font-bold mt-1 text-[#f5f2ed]">${(totalSpent / 30).toFixed(0)}</p>
+              <p className="text-[#a89580] text-[10px] uppercase font-bold tracking-widest">
+                Daily Avg
+              </p>
+              <p className="text-xl font-bold mt-1 text-[#f5f2ed]">
+                ${(totalSpent / 30).toFixed(0)}
+              </p>
             </div>
             <div className="bg-[#1f1815] p-4 rounded-2xl border border-[#2d2420]">
-              <p className="text-[#a89580] text-[10px] uppercase font-bold tracking-widest">Safe Spend</p>
-              <p className="text-xl font-bold mt-1 text-[#9fb89f]">${(income * 0.3 / 30).toFixed(0)}</p>
+              <p className="text-[#a89580] text-[10px] uppercase font-bold tracking-widest">
+                Safe Spend
+              </p>
+              <p className="text-xl font-bold mt-1 text-[#9fb89f]">
+                ${((income * 0.3) / 30).toFixed(0)}
+              </p>
             </div>
           </div>
         </aside>
@@ -289,7 +321,10 @@ export default function DashboardPage() {
         footer={
           <>
             <ResponsiveModalClose>
-              <Button variant="outline" className="w-full sm:w-auto border-[#2d2420] bg-transparent text-[#a89580] hover:bg-[#1f1815] hover:text-[#f5f2ed]">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto border-[#2d2420] bg-transparent text-[#a89580] hover:bg-[#1f1815] hover:text-[#f5f2ed]"
+              >
                 Cancel
               </Button>
             </ResponsiveModalClose>
@@ -299,7 +334,9 @@ export default function DashboardPage() {
               className="w-full sm:w-auto warm-gradient text-white"
               disabled={isSubmitting}
             >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Log Intentional Spend
             </Button>
           </>
