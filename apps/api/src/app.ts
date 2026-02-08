@@ -86,20 +86,48 @@ app.get("/health", async (c) => {
 // Routes
 app.route("/api/v1", v1Routes);
 
+// Helper to add CORS headers to any response
+const addCorsHeaders = (c: any, response: Response): Response => {
+  const origin = c.req.header("origin") || "";
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[];
+
+  const allowedOrigin =
+    !origin || allowedOrigins.includes(origin)
+      ? origin || allowedOrigins[0] || "*"
+      : allowedOrigins[0] || "*";
+
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set("Access-Control-Allow-Origin", allowedOrigin);
+  newHeaders.set("Access-Control-Allow-Credentials", "true");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders,
+  });
+};
+
 // Error handler
 app.onError((err, c) => {
+  let response: Response;
+
   if (err instanceof HTTPException) {
-    return err.getResponse();
+    response = err.getResponse();
+  } else {
+    console.error("Unhandled error:", err);
+    response = c.json({ error: "Internal server error" }, 500);
   }
 
-  console.error("Unhandled error:", err);
-
-  return c.json({ error: "Internal server error" }, 500);
+  return addCorsHeaders(c, response);
 });
 
 // Not found handler
 app.notFound((c) => {
-  return c.json({ error: "Not found" }, 404);
+  return addCorsHeaders(c, c.json({ error: "Not found" }, 404));
 });
 
 export default app;
