@@ -3,13 +3,40 @@ import { pinoLogger } from "hono-pino";
 import { requestId } from "hono/request-id";
 import { HTTPException } from "hono/http-exception";
 import { cors } from "hono/cors";
-import { sql } from 'drizzle-orm'
+import { sql } from "drizzle-orm";
 
 import { v1Routes } from "./routes/v1";
 import { generalRateLimiter } from "./lib/middleware/rate-limiter";
 import { getDb } from "./db";
 
 const app = new Hono();
+
+// CORS configuration
+app.use(
+  cors({
+    origin: (origin) => {
+      if (!origin) return "*";
+
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
+
+      return allowedOrigins.includes(origin) ? origin : null;
+    },
+    credentials: true,
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+    ],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    exposeHeaders: ["Set-Cookie"],
+    maxAge: 86400,
+  }),
+);
 
 // Middleware
 app.use(requestId());
@@ -20,34 +47,8 @@ app.use(
     },
   }),
 );
+
 app.use(generalRateLimiter);
-
-// CORS configuration
-app.use(
-  cors({
-    origin: (origin) => {
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        process.env.FRONTEND_URL, // Production frontend URL
-      ].filter(Boolean);
-
-      // Allow exact matches
-      if (allowedOrigins.includes(origin || "")) {
-        return origin;
-      }
-
-      // Default to first allowed origin for requests without origin
-      return allowedOrigins[0];
-    },
-    credentials: true,
-    allowHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    exposeHeaders: ["Set-Cookie"],
-    maxAge: 86400,
-  }),
-);
-
 // Health check
 app.get("/health", async (c) => {
   try {
@@ -60,18 +61,21 @@ app.get("/health", async (c) => {
       timestamp: new Date().toISOString(),
       version: process.env.GIT_SHA || "unknown",
       checks: {
-        database: "ok"
-      }
+        database: "ok",
+      },
     });
   } catch (error) {
-    return c.json({
-      status: "unhealthy",
-      timestamp: new Date().toISOString(),
-      version: process.env.GIT_SHA || "unknown",
-      checks: {
-        database: "ok"
-      }
-    }, 503);
+    return c.json(
+      {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        version: process.env.GIT_SHA || "unknown",
+        checks: {
+          database: "ok",
+        },
+      },
+      503,
+    );
   }
 });
 
