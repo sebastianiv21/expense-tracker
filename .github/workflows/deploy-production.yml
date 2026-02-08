@@ -58,7 +58,7 @@ jobs:
       - name: Smoke test
         run: |
           sleep 10
-          curl -f https://intent-expense-tracker-production.sebastianiv21.workers.dev/health || exit 1
+          curl -f https://intent-expense-tracker-api-production.sebastianiv21.workers.dev/health || exit 1
 
   notify:
     needs: deploy-api
@@ -73,7 +73,7 @@ jobs:
           args: |
             🚀 **Production Deployment**
 
-            🔗 **API**: https://intent-expense-tracker-production.sebastianiv21.workers.dev
+            🔗 **API**: https://intent-expense-tracker-api-production.sebastianiv21.workers.dev
             🔗 **Web**: https://intent.luisibarra.dev
 
             Status: ${{ needs.deploy-api.result == 'success' && '✅ Success' || '❌ Failed' }}
