@@ -48,7 +48,7 @@ export function BudgetForm({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(createBudgetSchema) as any,
     defaultValues: {
-      amount: initialValues?.amount || 0,
+      amount: initialValues?.amount || undefined,
       period: initialValues?.period || "monthly",
       startDate: initialValues?.startDate || new Date().toISOString(),
       categoryId: initialValues?.categoryId || "",
@@ -111,7 +111,15 @@ export function BudgetForm({
                     placeholder="0.00"
                     className="pl-7"
                     {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    value={field.value || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || val === "-") {
+                        field.onChange(undefined);
+                      } else {
+                        field.onChange(Number(val));
+                      }
+                    }}
                   />
                 </div>
               </FormControl>

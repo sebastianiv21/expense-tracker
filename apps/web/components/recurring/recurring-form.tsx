@@ -68,7 +68,7 @@ export function RecurringForm({
   const form = useForm<CreateRecurringTransaction>({
     resolver: zodResolver(createRecurringTransactionSchema),
     defaultValues: {
-      amount: initialValues?.amount ?? 0,
+      amount: initialValues?.amount || undefined,
       type: initialValues?.type ?? "expense",
       description: initialValues?.description ?? "",
       categoryId: initialValues?.categoryId ?? null,
@@ -117,7 +117,15 @@ export function RecurringForm({
                     placeholder="0.00"
                     className="pl-7 bg-[#16110a] border-[#2d2420] text-[#f5f2ed] placeholder:text-[#4a3f35]"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={field.value || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || val === "-") {
+                        field.onChange(undefined);
+                      } else {
+                        field.onChange(parseFloat(val));
+                      }
+                    }}
                   />
                 </div>
               </FormControl>

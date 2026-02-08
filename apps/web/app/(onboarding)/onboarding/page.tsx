@@ -45,7 +45,7 @@ export default function OnboardingPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(createFinancialProfileSchema) as any,
     defaultValues: {
-      monthlyIncomeTarget: 0,
+      monthlyIncomeTarget: undefined as unknown as number,
       needsPercentage: 50,
       wantsPercentage: 30,
       futurePercentage: 20,
@@ -125,9 +125,15 @@ export default function OnboardingPage() {
                           className="pl-7"
                           disabled={isLoading}
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || val === "-") {
+                              field.onChange(undefined);
+                            } else {
+                              field.onChange(Number(val));
+                            }
+                          }}
                         />
                       </div>
                     </FormControl>
