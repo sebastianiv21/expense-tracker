@@ -5,6 +5,8 @@ import { seedDefaultCategoriesForUser } from "./seed-utils";
 
 export const getAuth = () => {
   const db = getDb();
+  const isProduction = process.env.ENVIRONMENT === "production";
+  
   return betterAuth({
     database: drizzleAdapter(db, {
       provider: "pg",
@@ -25,18 +27,19 @@ export const getAuth = () => {
     basePath: "/api/v1/auth",
     trustedOrigins: [process.env.FRONTEND_URL || "http://localhost:3000"],
     advanced: {
-      useSecureCookies: true,
-      cookiePrefix: "__Secure-better-auth",
+      useSecureCookies: isProduction,
     },
     session: {
       cookieCache: {
         enabled: true,
         maxAge: 60 * 5,
       },
-      cookieAttributes: {
-        sameSite: "none",
-        secure: true,
-      },
     },
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+    socialProviders: {},
   });
 };
