@@ -13,17 +13,20 @@ const app = new Hono();
 
 // CORS configuration
 app.use(
+  "*",
   cors({
     origin: (origin) => {
-      if (!origin) return "*";
-
       const allowedOrigins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         process.env.FRONTEND_URL,
-      ].filter(Boolean);
+      ].filter(Boolean) as string[];
 
-      return allowedOrigins.includes(origin) ? origin : null;
+      if (!origin || allowedOrigins.includes(origin)) {
+        return origin || allowedOrigins[0] || "*";
+      }
+
+      return allowedOrigins[0] || "*";
     },
     credentials: true,
     allowHeaders: [
@@ -71,7 +74,7 @@ app.get("/health", async (c) => {
         timestamp: new Date().toISOString(),
         version: process.env.GIT_SHA || "unknown",
         checks: {
-          database: "ok",
+          database: "error",
         },
       },
       503,
