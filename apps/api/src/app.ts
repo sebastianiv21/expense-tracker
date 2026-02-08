@@ -34,6 +34,7 @@ app.use(
       "Authorization",
       "X-Requested-With",
       "Accept",
+      "User-Agent",
     ],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     exposeHeaders: ["Set-Cookie"],
