@@ -8,7 +8,10 @@ export default async function middleware(request: NextRequest) {
 
   // Check for session token cookie
   // Better Auth uses 'better-auth.session_token' by default
-  const sessionToken = request.cookies.get("better-auth.session_token");
+  // In production with HTTPS, it uses '__Secure-better-auth.session_token'
+  const sessionToken =
+    request.cookies.get("better-auth.session_token") ||
+    request.cookies.get("__Secure-better-auth.session_token");
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isPublicRoute = publicRoutes.some((route) =>

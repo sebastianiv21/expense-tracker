@@ -24,10 +24,3 @@ resource "neon_role" "this" {
   branch_id  = neon_branch.this.id
   name       = "intent_owner_${var.branch_name}"
 }
-
-resource "neon_database" "this" {
-  project_id = var.project_id
-  branch_id  = neon_branch.this.id
-  owner_name = neon_role.this.name
-  name       = "intent_db"
-}

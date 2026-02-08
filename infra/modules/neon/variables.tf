@@ -8,12 +8,12 @@ variable "project_id" {
   type        = string
 }
 
-variable "environment" {
-  description = "The environment to use for the database"
+variable "org_id" {
+  description = "The Neon organization ID"
   type        = string
 }
 
-variable "org_id" {
-  description = "The Neon organization ID"
+variable "neon_database_name" {
+  description = "The name of the database to use for the application"
   type        = string
 }
